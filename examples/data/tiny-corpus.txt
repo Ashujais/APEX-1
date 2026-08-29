@@ -1,0 +1,4 @@
+APEX-1 is an experimental local-first language model research platform.
+Verified capabilities are labeled and reproducible evidence is recorded.
+Training data needs a known source, license, version, and content hash.
+The tiny model exists to test real tokenizer, checkpoint, and inference paths.

@@ -1,0 +1,17 @@
+name: kaggle-gpu
+status: experimental
+provider: kaggle
+detect_hardware_at_runtime: true
+require_cuda: true
+artifact_root: /kaggle/working/apex-artifacts
+defaults:
+  model_profile: apex-tiny
+  precision: auto
+  batch_size: auto
+  sequence_length: auto
+  gradient_accumulation_steps: auto
+  gradient_checkpointing: true
+safety:
+  reserve_memory: true
+  refuse_unmeasured_gpu: true
+  require_explicit_dataset: true

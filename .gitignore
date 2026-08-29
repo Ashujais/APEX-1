@@ -3,10 +3,11 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+.test-tmp/
 .ruff_cache/
 .coverage
 htmlcov/
-data/
+/data/
 dist/
 build/
 *.egg-info/
@@ -19,4 +20,5 @@ experiments/*
 !experiments/.gitkeep
 datasets/*
 !datasets/.gitkeep
+.apex/
 APEX-1-social-preview.png

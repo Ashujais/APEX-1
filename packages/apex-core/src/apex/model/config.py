@@ -1,0 +1,47 @@
+from __future__ import annotations
+
+from dataclasses import asdict, dataclass
+from typing import Any
+
+
+@dataclass(frozen=True)
+class ApexConfig:
+    vocab_size: int = 32_000
+    hidden_size: int = 768
+    num_layers: int = 12
+    num_attention_heads: int = 12
+    num_key_value_heads: int = 4
+    intermediate_size: int = 2_048
+    max_sequence_length: int = 2_048
+    rope_theta: float = 10_000.0
+    rms_norm_eps: float = 1e-6
+    dropout: float = 0.0
+    tie_word_embeddings: bool = True
+    gradient_checkpointing: bool = False
+
+    def __post_init__(self) -> None:
+        if self.hidden_size % self.num_attention_heads != 0:
+            raise ValueError("hidden_size must be divisible by num_attention_heads")
+        if self.num_attention_heads % self.num_key_value_heads != 0:
+            raise ValueError("num_attention_heads must be divisible by num_key_value_heads")
+        if self.max_sequence_length < 2:
+            raise ValueError("max_sequence_length must be at least 2")
+
+    @property
+    def head_dim(self) -> int:
+        return self.hidden_size // self.num_attention_heads
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def tiny(cls, vocab_size: int = 300) -> ApexConfig:
+        return cls(
+            vocab_size=vocab_size,
+            hidden_size=64,
+            num_layers=2,
+            num_attention_heads=4,
+            num_key_value_heads=2,
+            intermediate_size=160,
+            max_sequence_length=128,
+        )

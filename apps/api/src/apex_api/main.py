@@ -10,12 +10,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from apex_api.config import Settings, get_settings
 from apex_api.database import Database
 from apex_api.providers import ModelRouter
-from apex_api.routers import auth, chat, health, models
+from apex_api.routers import auth, chat, files, health, models, rag, tools
+from apex_api.storage import LocalFileStorage
+from apex_api.tool_runtime import ToolRuntime
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     runtime_settings = settings or get_settings()
     database = Database(runtime_settings.database_url)
+    file_storage = LocalFileStorage(
+        runtime_settings.file_storage_root, runtime_settings.max_upload_bytes
+    )
 
     @asynccontextmanager
     async def lifespan(application: FastAPI):
@@ -33,7 +38,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     application.state.settings = runtime_settings
     application.state.database = database
+    application.state.file_storage = file_storage
     application.state.model_router = ModelRouter()
+    application.state.tool_runtime = ToolRuntime(database, runtime_settings)
     application.add_middleware(
         CORSMiddleware,
         allow_origins=runtime_settings.cors_origin_list,
@@ -57,6 +64,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     application.include_router(models.router)
     application.include_router(auth.router)
     application.include_router(chat.router)
+    application.include_router(files.router)
+    application.include_router(rag.router)
+    application.include_router(tools.mcp_router)
+    application.include_router(tools.tools_router)
     return application
 
 

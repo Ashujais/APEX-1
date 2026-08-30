@@ -31,8 +31,13 @@ def test_training_checkpoint_and_seeded_generation(tmp_path) -> None:
     model = ApexForCausalLM(config)
     trainer = Trainer(model, TrainerConfig(learning_rate=1e-3))
     batch = torch.randint(0, config.vocab_size, (1, 16))
+    initial_parameters = model.token_embeddings.weight.detach().clone()
     loss = trainer.train_step(batch)
     assert loss > 0
+    assert trainer.step == 1
+    assert trainer.scheduler.last_epoch == 1
+    assert trainer.optimizer.state
+    assert not torch.equal(initial_parameters, model.token_embeddings.weight)
     checkpoint = tmp_path / "tiny.pt"
     trainer.save_checkpoint(checkpoint, metadata={"purpose": "test"})
     assert trainer.load_checkpoint(checkpoint) == {"purpose": "test"}
@@ -42,3 +47,9 @@ def test_training_checkpoint_and_seeded_generation(tmp_path) -> None:
     second = generate(model, batch[:, :3], max_new_tokens=3, top_k=8, seed=11)
     assert first.shape == (1, 6)
     assert torch.equal(first, second)
+
+
+def test_apex_100m_profile_is_configuration_only_and_parameter_checked() -> None:
+    config = ApexConfig.apex_100m()
+    assert config.gradient_checkpointing is True
+    assert config.estimated_parameter_count == 100_092_672

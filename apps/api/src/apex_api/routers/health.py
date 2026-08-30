@@ -4,6 +4,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import PlainTextResponse
 from sqlalchemy import text
 
+from apex_api.redis_health import redis_ping
+
 router = APIRouter(tags=["system"])
 
 
@@ -21,9 +23,32 @@ def ready(request: Request) -> dict[str, object]:
         database_ok = True
     except Exception:
         database_ok = False
+    settings = request.app.state.settings
+    redis_configured = bool(settings.redis_url)
+    redis_ok = (
+        redis_ping(settings.redis_url, settings.redis_timeout_seconds)
+        if settings.redis_url
+        else False
+    )
+    redis_ready = redis_ok if settings.redis_required else True
     return {
-        "status": "ready" if database_ok else "not_ready",
-        "checks": {"database": database_ok, "model_router": True},
+        "status": "ready" if database_ok and redis_ready else "not_ready",
+        "checks": {
+            "database": database_ok,
+            "model_router": True,
+            "redis": {
+                "configured": redis_configured,
+                "required": settings.redis_required,
+                "available": redis_ok,
+                "status": (
+                    "available"
+                    if redis_ok
+                    else "unavailable"
+                    if redis_configured
+                    else "not_configured"
+                ),
+            },
+        },
     }
 
 

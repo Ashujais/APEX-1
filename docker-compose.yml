@@ -33,6 +33,8 @@ services:
       APEX_DATABASE_URL: postgresql+psycopg://apex:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-apex}
       APEX_SECRET_KEY: ${APEX_SECRET_KEY:?set APEX_SECRET_KEY in .env}
       APEX_CORS_ORIGINS: http://localhost:3000
+      APEX_REDIS_URL: redis://redis:6379/0
+      APEX_REDIS_REQUIRED: "true"
     ports:
       - "8000:8000"
     depends_on:

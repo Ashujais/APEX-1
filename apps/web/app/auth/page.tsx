@@ -1,7 +1,7 @@
 'use client';
 
 import { ArrowLeft, KeyRound, Loader2, ShieldCheck } from 'lucide-react';
-import { FormEvent, useState } from 'react';
+import { type SyntheticEvent, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,7 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     setBusy(true);
     setError(null);
@@ -85,18 +85,18 @@ export default function AuthPage() {
 
           <form className="mt-6 space-y-4" onSubmit={submit}>
             {mode === 'register' && (
-              <label className="block text-xs font-medium">
+              <label className="block text-xs font-medium" htmlFor="name">
                 Name
-                <Input className="mt-1.5" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={120} autoComplete="name" />
+                <Input id="name" className="mt-1.5" value={name} onChange={(event) => setName(event.target.value)} required minLength={1} maxLength={120} autoComplete="name" />
               </label>
             )}
-            <label className="block text-xs font-medium">
+            <label className="block text-xs font-medium" htmlFor="email">
               Email
-              <Input className="mt-1.5" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" />
+              <Input id="email" className="mt-1.5" type="email" value={email} onChange={(event) => setEmail(event.target.value)} required autoComplete="email" />
             </label>
-            <label className="block text-xs font-medium">
+            <label className="block text-xs font-medium" htmlFor="password">
               Password
-              <Input className="mt-1.5" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
+              <Input id="password" className="mt-1.5" type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={12} autoComplete={mode === 'login' ? 'current-password' : 'new-password'} />
               {mode === 'register' && <span className="mt-1 block font-normal text-muted-foreground">Use at least 12 characters.</span>}
             </label>
             {error && <p role="alert" className="rounded-lg border border-destructive/20 bg-destructive/5 px-3 py-2 text-xs text-destructive">{error}</p>}

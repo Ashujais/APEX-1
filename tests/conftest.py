@@ -18,6 +18,8 @@ def client(tmp_path: Path) -> Iterator[TestClient]:
         database_url=f"sqlite:///{tmp_path / 'test.db'}",
         secret_key=SecretStr("test-secret-that-is-long-and-random-enough-for-tests"),
         expose_development_tokens=True,
+        file_storage_root=tmp_path / "files",
+        max_upload_bytes=1024,
     )
     with TestClient(create_app(settings)) as test_client:
         yield test_client

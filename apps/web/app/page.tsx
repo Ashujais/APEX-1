@@ -19,7 +19,8 @@ import {
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
-import { FormEvent, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { type SyntheticEvent, useEffect, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -44,7 +45,9 @@ type ApiStatus = 'checking' | 'signed-in' | 'signed-out' | 'offline';
 type LiveMessage = { id: string; role: 'user' | 'assistant'; content: string };
 
 export default function Home() {
-  const [apiStatus, setApiStatus] = useState<ApiStatus>('checking');
+  const [apiStatus, setApiStatus] = useState<ApiStatus>(() =>
+    hasAccessToken() ? 'signed-in' : 'checking',
+  );
   const [prompt, setPrompt] = useState('');
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [liveMessages, setLiveMessages] = useState<LiveMessage[]>([]);
@@ -52,16 +55,13 @@ export default function Home() {
   const [notice, setNotice] = useState<string | null>(null);
 
   useEffect(() => {
-    if (hasAccessToken()) {
-      setApiStatus('signed-in');
-      return;
-    }
+    if (hasAccessToken()) return;
     restoreBrowserSession()
       .then((restored) => setApiStatus(restored ? 'signed-in' : 'signed-out'))
       .catch(() => setApiStatus('offline'));
   }, []);
 
-  async function sendMessage(event: FormEvent<HTMLFormElement>) {
+  async function sendMessage(event: SyntheticEvent<HTMLFormElement, SubmitEvent>) {
     event.preventDefault();
     const text = prompt.trim();
     if (!text || sending) return;
@@ -112,20 +112,20 @@ export default function Home() {
           if (!dataLine) continue;
           const payload = JSON.parse(dataLine.slice(6)) as { text: string };
           setLiveMessages((current) =>
-            current.map((message) =>
-              message.id === assistantId
-                ? { ...message, content: message.content + payload.text }
-                : message,
+            current.map((liveMessage) =>
+              liveMessage.id === assistantId
+                ? { ...liveMessage, content: liveMessage.content + payload.text }
+                : liveMessage,
             ),
           );
         }
         if (done) break;
       }
     } catch (problem) {
-      const message = problem instanceof Error ? problem.message : 'Request failed';
-      setLiveMessages((current) =>
-        current.map((item) =>
-          item.id === assistantId ? { ...item, content: `Request failed: ${message}` } : item,
+      setLiveMessages(
+        replaceMessageContent(
+          assistantId,
+          `Request failed: ${problem instanceof Error ? problem.message : 'Request failed'}`,
         ),
       );
     } finally {
@@ -259,7 +259,7 @@ export default function Home() {
                 <Button type="submit" size="icon" aria-label="Send message" className="rounded-xl" disabled={sending}><Send /></Button>
               </div>
             </form>
-            {notice && <p role="status" className="mt-2 text-center text-[11px] text-destructive">{notice} <a className="underline underline-offset-2" href="/auth">Open sign in</a></p>}
+            {notice && <output className="mt-2 block text-center text-[11px] text-destructive">{notice} <Link className="underline underline-offset-2" href="/auth">Open sign in</Link></output>}
             <p className="mt-2 text-center text-[10px] text-muted-foreground">Experimental research platform. Outputs may be incorrect; verified states are labeled explicitly.</p>
           </div>
         </div>
@@ -273,6 +273,11 @@ function statusLabel(status: ApiStatus) {
   if (status === 'signed-out') return 'Sign-in required';
   if (status === 'offline') return 'API offline';
   return 'Checking';
+}
+
+function replaceMessageContent(messageId: string, content: string) {
+  return (current: LiveMessage[]) =>
+    current.map((item) => (item.id === messageId ? { ...item, content } : item));
 }
 
 function CapabilityCard({ label, value, detail }: { label: string; value: string; detail: string }) {

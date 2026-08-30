@@ -7,7 +7,15 @@ from conftest import register_and_login
 
 def test_health_and_model_registry_are_honest(client: TestClient) -> None:
     assert client.get("/health").json()["status"] == "ok"
-    assert client.get("/ready").json()["checks"]["database"] is True
+    readiness = client.get("/ready").json()
+    assert readiness["status"] == "ready"
+    assert readiness["checks"]["database"] is True
+    assert readiness["checks"]["redis"] == {
+        "configured": False,
+        "required": False,
+        "available": False,
+        "status": "not_configured",
+    }
     models = client.get("/v1/models").json()
     assert [model["id"] for model in models] == ["apex-dev"]
     assert "not an LLM" in models[0]["description"]

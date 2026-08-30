@@ -27,6 +27,24 @@ npm run dev
 
 Open `http://localhost:3000`. API documentation is at `http://localhost:8000/docs`.
 
+On Windows, the equivalent combined command is:
+
+```powershell
+.\scripts\windows\dev.ps1
+```
+
+Other native commands:
+
+```powershell
+.\scripts\windows\test.ps1
+.\scripts\windows\hardware.ps1
+.\scripts\windows\train.ps1 -Steps 1
+.\scripts\windows\evaluate.ps1
+```
+
+Linux/CI equivalents remain available through make dev, make test, make hardware, make train,
+and make evaluate. GNU Make is not required for Windows operation.
+
 ## Verification
 
 ```powershell
@@ -37,6 +55,19 @@ npm run build
 ```
 
 The Docker contracts are present, but this machine's Docker daemon must be running before `docker compose up` can be verified.
+
+## Redis modes
+
+Default local development uses SQLite and does not require Redis. /ready reports Redis as
+not_configured while the service remains ready.
+
+To test with Redis, start Redis, set APEX_REDIS_URL=redis://localhost:6379/0, and optionally set
+APEX_REDIS_REQUIRED=true. Docker Compose configures Redis as required for its production-like API
+service and includes a real Redis health check. Connectivity is never fabricated.
+
+File upload, local RAG, MCP/tool endpoints, and their capability boundaries are summarized in
+docs/CURRENT_STATUS.md. npm ownership and the five optional WASM packages are documented in
+docs/NPM_ARCHITECTURE.md.
 
 ## Research commands
 
